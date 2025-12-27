@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Tournament App</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<h1>Signup / Login</h1>
+<input id="fname" placeholder="First Name"><br>
+<input id="lname" placeholder="Last Name"><br>
+<input id="email" placeholder="Email"><br>
+<input id="pass" type="password" placeholder="Password"><br>
+<button onclick="signup()">Signup</button>
+<button onclick="login()">Login</button>
+
+<script>
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Signup
+function signup(){
+  const fname = document.getElementById("fname").value;
+  const lname = document.getElementById("lname").value;
+  const email = document.getElementById("email").value;
+  const pass = document.getElementById("pass").value;
+
+  auth.createUserWithEmailAndPassword(email, pass)
+  .then(res=>{
+    db.collection("users").doc(res.user.uid).set({
+      firstName: fname,
+      lastName: lname,
+      email: email,
+      coins: 0,
+      isAdmin: false
+    });
+    alert("Signup successful");
+  }).catch(e=>alert(e.message));
+}
+
+// Login
+function login(){
+  const email = document.getElementById("email").value;
+  const pass = document.getElementById("pass").value;
+  auth.signInWithEmailAndPassword(email, pass)
+  .then(res=>alert("Login successful"))
+  .catch(e=>alert(e.message));
+}
+
+// Add Match (Admin)
+function addMatch(game, mode, team, type, entryCoins){
+  db.collection("matches").add({
+    game: game,
+    mode: mode,
+    team: team,
+    type: type,
+    entryCoins: entryCoins,
+    status: "ON",
+    roomId: "",
+    password: ""
+  });
+}
+
+// Join Match (User)
+function joinMatch(matchId){
+  db.collection("joins").add({
+    userId: auth.currentUser.uid,
+    matchId: matchId
+  });
+  alert("Joined");
+}
+
+// Update Room (Admin)
+function updateRoom(matchId, roomId, password){
+  db.collection("matches").doc(matchId).update({
+    roomId: roomId,
+    password: password
+  });
+}
+</script>
+
+</body>
+  </html>
